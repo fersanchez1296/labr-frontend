@@ -123,7 +123,7 @@ export const Admin = (props: Props) => {
     window !== undefined ? () => window().document.body : undefined;
 
   return (
-    <Box sx={{ display: "flex" }}>
+    <Box sx={{ display: "flex", width : "100vw" }}>
       <CssBaseline />
       <AppBar
         position="fixed"
@@ -190,10 +190,10 @@ export const Admin = (props: Props) => {
         sx={{
           flexGrow: 1,
           p: 3,
-          width: { sm: `calc(100% - ${drawerWidth}px)` },
+          width: "100%",
         }}
       >
-        <Toolbar />
+        
         {activeComponent === "users" ? <Users /> : null}
         {activeComponent === "materias" ? <Materias /> : null}
         {activeComponent === "practicas" ? <Practicas /> : null}

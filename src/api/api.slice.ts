@@ -5,18 +5,42 @@ export const apiSlice = createApi({
   baseQuery: fetchBaseQuery({
     baseUrl: 'https://reserva-laboratorios-production.up.railway.app/'
   }),
-  tagTypes: ['Users'],
+  tagTypes: ['Users','Labs'],
   endpoints: (builder) => ({
-    getUsers: builder.query({
-      query: () => {
+    getAll: builder.query({
+      query: (endpoint) => {
         return {
-          url: 'adminTeacher',
+          url: `${endpoint}`,
+          method: 'GET',
+        };
+      },
+      providesTags: ['Users','Labs'],
+    }),
+    getSingle: builder.query({
+      query: ({endpoint,id}) => {
+        return {
+          url: `${endpoint}?search=${id}`,
           method: 'GET',
         };
       },
       providesTags: ['Users'],
     }),
-    createUser: builder.mutation({
+    updateQuery: builder.mutation({
+      query: (user) => ({
+        url: `adminUser-update/${user.codigo}`,
+        method: 'PUT',
+        body: user,
+      }),
+      invalidatesTags: ['Users'], // Invalida la caché de 'Users' después de realizar el PUT
+    }),
+    deleteQuery: builder.mutation({
+      query: ({ endpoint, Id }) => ({
+        url: `${endpoint}/${Id}`,
+        method: 'DELETE',
+      }),
+      invalidatesTags: ['Users'], // Invalidates the 'Users' cache after performing the DELETE
+    }),
+    newQuery: builder.mutation({
       query: (newUser) => ({
         url: 'adminTeacher',
         method: 'POST',
@@ -69,12 +93,16 @@ export const apiSlice = createApi({
 });
 
 export const {
-  useGetUsersQuery,
-  useCreateUserMutation,
+  useGetAllQuery,
+  useGetSingleQuery,
+  useNewQueryMutation,
+  useUpdateQueryMutation,
+  useDeleteQueryMutation,
   useGetLabsQuery,
   useGetSubjectsQuery,
   useGetPracticesQuery,
   useGetToolsQuery,
   useGetReservationsQuery,
+  
 } = apiSlice;
 

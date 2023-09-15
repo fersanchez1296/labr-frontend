@@ -9,21 +9,22 @@ import CloseIcon from "@mui/icons-material/Close";
 import Slide from "@mui/material/Slide";
 import { TransitionProps } from "@mui/material/transitions";
 import Box from "@mui/material/Box";
-import { grey } from "@mui/material/colors";
-import TextField from "@mui/material/TextField";
+import { grey, green } from "@mui/material/colors";
 import { Grid } from "@mui/material";
-import Paper from "@mui/material/Paper";
-import { styled } from "@mui/material/styles";
 import { Formik, Form } from "formik";
-import MenuItem from "@mui/material/MenuItem";
-
-const Item = styled(Paper)(({ theme }) => ({
-  backgroundColor: theme.palette.mode === "dark" ? "transparent" : "#fff",
-  ...theme.typography.body2,
-  padding: theme.spacing(1),
-  textAlign: "center",
-  color: theme.palette.text.secondary,
-}));
+import { CustomInput } from "../customInput/CustomInput";
+import { subjectInitialValues } from "../../models/subjectsInitialValues";
+import { CustomSelect } from "../customSelect/CustomSelect";
+import { subjectSchema } from "../../schemas/subjects.schema";
+import CircularProgress from "@mui/material/CircularProgress";
+import {
+  useNewQueryMutation,
+  useGetSingleQuery,
+  useUpdateQueryMutation,
+} from "../../api/api.slice";
+import { SnackBar } from "../snackBar/SnackBar";
+import { Item } from "../../utilities/item.utilities";
+import { Spiner } from "../spiner/Spiner";
 
 const Transition = React.forwardRef(function Transition(
   props: TransitionProps & {
@@ -34,34 +35,50 @@ const Transition = React.forwardRef(function Transition(
   return <Slide direction="up" ref={ref} {...props} />;
 });
 
-export const FormMaterias = ({
-  show,
-  onClose,
-}: {
+interface Props {
   show: boolean;
   onClose: () => void;
-}) => {
+  itemId: number;
+}
+
+export const FormMaterias = ({ show, onClose, itemId }: Props) => {
   const handleClose = () => {
     onClose();
   };
 
-  const currencies = [
-    {
-      value: "1",
-      label: "Administrador",
-    },
-    {
-      value: "2",
-      label: "Profesor",
-    },
-    {
-      value: "3",
-      label: "Alumno",
-    },
-  ];
+  const [newQuery, { isError: isErrorCreate, isSuccess: isSuccessCreate }] =
+    useNewQueryMutation();
+  const {
+    data: subjects,
+    isError: isErrorSubject,
+    isLoading,
+    error: errorSubject,
+  } = useGetSingleQuery(itemId);
+  const [updateQuery, { isError: errorUpdate, isSuccess: successUpdate }] =
+    useUpdateQueryMutation();
 
+  if (isLoading) {
+    return (
+      <>
+        <Spiner showSpiner />
+        <SnackBar
+          msg={"Información encontrada en la base de datos"}
+          variant={"success"}
+        />
+      </>
+    );
+  }
+
+  if (isErrorSubject || subjects === undefined) {
+    return (
+      <>
+        <div>{`Error ${errorSubject}`}</div>
+        <SnackBar msg={"Ocurrió un error en la petición"} variant={"error"} />
+      </>
+    );
+  }
   return (
-    <div>
+    <>
       <Dialog
         fullScreen
         open={show}
@@ -78,12 +95,9 @@ export const FormMaterias = ({
             >
               <CloseIcon />
             </IconButton>
-            <Typography sx={{ ml: 2, flex: 1 }} variant="h6" component="div">
-              Nueva Materia
+            <Typography sx={{ ml: 2, flex: 1 }} variant="h4" component="div">
+              {itemId === 0 ? "Nueva Materia" : "Editar Materia"}
             </Typography>
-            <Button autoFocus color="inherit" onClick={handleClose}>
-              Guardar
-            </Button>
           </Toolbar>
         </AppBar>
         <Box
@@ -92,115 +106,130 @@ export const FormMaterias = ({
             height: "100%",
             backgroundColor: grey[300],
             padding: "0 1rem ",
-            display : "flex",
-            alignItems : "center"
+            display: "flex",
+            alignItems: "center",
           }}
         >
-          <Formik initialValues={""} onSubmit={() => ""}>
-            <Form>
-              <Grid container spacing={4}>
-                <Grid item xs={6}>
-                  <Item>
-                    <TextField
-                      id="codigo"
-                      label="Código"
-                      variant="outlined"
-                      sx={{ width: "100%", height: "100%" }}
-                    />
-                  </Item>
+          <Formik
+            validationSchema={subjectSchema}
+            enableReinitialize={true}
+            initialValues={itemId !== 0 ? subjects[0] : subjectInitialValues}
+            onSubmit={async (values, { setSubmitting, resetForm }) => {
+              try {
+                setSubmitting(true);
+                itemId === 0
+                  ? await newQuery(values)
+                  : await updateQuery(values);
+              } catch (error) {
+                console.log(error);
+              } finally {
+                setSubmitting(false);
+                resetForm();
+              }
+            }}
+          >
+            {({ handleSubmit, handleChange, values, isSubmitting }) => (
+              <Form onSubmit={handleSubmit}>
+                <Grid container spacing={5}>
+                  <CustomInput
+                    id="crn"
+                    label="CRN"
+                    name="crn"
+                    value={values.crn}
+                    onChange={handleChange}
+                    size={6}
+                    type="number"
+                  />
+                  <CustomInput
+                    id="semestre"
+                    label="Semestre"
+                    name="semestre"
+                    value={values.semestre}
+                    onChange={handleChange}
+                    size={6}
+                    type="text"
+                  />
+                  <CustomInput
+                    id="nombre"
+                    label="Nombre"
+                    name="nombre"
+                    value={values.nombre}
+                    onChange={handleChange}
+                    size={12}
+                    type="text"
+                  />
+
+                  <CustomInput
+                    id="carrera"
+                    label="Carrera"
+                    name="carrera"
+                    value={values.carrera}
+                    onChange={handleChange}
+                    size={12}
+                    type="text"
+                  />
+
+                  <Grid item xs={12}>
+                    <Item>
+                      <Button
+                        variant="contained"
+                        type="submit"
+                        disabled={isSubmitting}
+                        sx={{ width: "100%", height: "100%" }}
+                      >
+                        {isSubmitting ? (
+                          <CircularProgress
+                            size={24}
+                            sx={{
+                              color: green[500],
+                              position: "absolute",
+                              top: "50%",
+                              left: "50%",
+                              marginTop: "-12px",
+                              marginLeft: "-12px",
+                            }}
+                          />
+                        ) : (
+                          "Guardar"
+                        )}
+                      </Button>
+                    </Item>
+                  </Grid>
                 </Grid>
-                <Grid item xs={6}>
-                  <Item>
-                    <TextField
-                      id="rol"
-                      select
-                      label="Rol"
-                      defaultValue={1}
-                      sx={{ width: "100%", height: "100%" }}
-                    >
-                      {currencies.map((option) => (
-                        <MenuItem key={option.value} value={option.value}>
-                          {option.label}
-                        </MenuItem>
-                      ))}
-                    </TextField>
-                  </Item>
-                </Grid>
-                <Grid item xs={12}>
-                  <Item>
-                    <TextField
-                      id="nombre"
-                      label="Nombre"
-                      variant="outlined"
-                      sx={{ width: "100%", height: "100%" }}
-                    />
-                  </Item>
-                </Grid>
-                <Grid item xs={6}>
-                  <Item>
-                    <TextField
-                      id="apellido-1"
-                      label="Apellido 1"
-                      variant="outlined"
-                      sx={{ width: "100%", height: "100%" }}
-                    />
-                  </Item>
-                </Grid>
-                <Grid item xs={6}>
-                  <Item>
-                    <TextField
-                      id="apellido-2"
-                      label="Apellido 2"
-                      variant="outlined"
-                      sx={{ width: "100%", height: "100%" }}
-                    />
-                  </Item>
-                </Grid>
-                <Grid item xs={6}>
-                  <Item>
-                    <TextField
-                      id="password"
-                      label="Contraseña"
-                      type="password"
-                      sx={{ width: "100%", height: "100%" }}
-                    />
-                  </Item>
-                </Grid>
-                <Grid item xs={6}>
-                  <Item>
-                    <TextField
-                      id="confirm-password"
-                      label="Confima tu contraseña"
-                      type="password"
-                      sx={{ width: "100%", height: "100%" }}
-                    />
-                  </Item>
-                </Grid>
-                <Grid item xs={6}>
-                  <Item>
-                    <TextField
-                      id="email"
-                      label="Email"
-                      variant="outlined"
-                      sx={{ width: "100%", height: "100%" }}
-                    />
-                  </Item>
-                </Grid>
-                <Grid item xs={6}>
-                  <Item>
-                    <TextField
-                      id="telefono"
-                      label="Teléfono"
-                      variant="outlined"
-                      sx={{ width: "100%", height: "100%" }}
-                    />
-                  </Item>
-                </Grid>
-              </Grid>
-            </Form>
+              </Form>
+            )}
           </Formik>
         </Box>
       </Dialog>
-    </div>
+      {isSuccessCreate ? (
+        <SnackBar
+          variant="success"
+          msg="Se agregó la información exitosamente"
+        />
+      ) : (
+        ""
+      )}
+      {isErrorCreate ? (
+        <SnackBar
+          variant="error"
+          msg="Ocurrió un error al agregar la información"
+        />
+      ) : (
+        ""
+      )}
+      {successUpdate ? (
+        <SnackBar variant="success" msg="Se modificó la información exitosamente" />
+      ) : (
+        ""
+      )}
+      {errorUpdate ? (
+        <SnackBar
+          variant="error"
+          msg="Ocurrió un error al modificar la información"
+        />
+      ) : (
+        ""
+      )}
+    </>
   );
 };

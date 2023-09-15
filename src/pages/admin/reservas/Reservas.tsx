@@ -1,4 +1,4 @@
-import { useGetUsersQuery } from "../../../api/api.slice";
+import { useGetAllQuery } from "../../../api/api.slice";
 import { Spiner } from "../../../components/spiner/Spiner";
 import { FormReservas } from "../../../components/formReservas/FormReservas";
 import { useState } from "react";
@@ -6,7 +6,7 @@ import { Table } from "../../../components/table/Table";
 import { columns } from "../../../models/userTableInfo.models";
 export const Reservas = () => {
   const endpointName = "adminReservations"; // Specify the desired endpoint name
-  const { data: users, isError, isLoading, error } = useGetUsersQuery(endpointName);
+  const { data: users, isError, isLoading, error } = useGetAllQuery(endpointName);
   const [showForm, setShowForm] = useState(false);
 
   if (isLoading) return <Spiner showSpiner />;

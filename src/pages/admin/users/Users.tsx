@@ -1,15 +1,18 @@
-import { useGetUsersQuery } from "../../../api/api.slice";
+import { useGetAllQuery } from "../../../api/api.slice";
 import { Spiner } from "../../../components/spiner/Spiner";
 import { FormUsers } from "../../../components/formUsers/FormUsers";
 import { useState } from "react";
 import { Table } from "../../../components/table/Table";
 import { columns } from "../../../models/userTableInfo.models";
 import { SnackBar } from "../../../components/snackBar/SnackBar";
+import { ConfirmationDialog } from "../../../components/confirmationDialog/ConfirmationDialog";
 
 export const Users = () => {
-  const endpointName = "adminTeacher"; // Specify the desired endpoint name
-  const { data: users, isError, isLoading, error } = useGetUsersQuery(endpointName);
+  const endpointName = "adminTeacher"; 
+  const { data: users, isError, isLoading, error } = useGetAllQuery(endpointName);
   const [showForm, setShowForm] = useState(false);
+  const [showDialog, setShowDialog] = useState(false);
+  const [userId, setUserId] = useState(0)
 
 
   if (isLoading) {
@@ -23,7 +26,7 @@ export const Users = () => {
   if (isError) return(
   <>
   <div>{`Error ${error}`}</div>
-  <SnackBar msg={"Ocurrió un error en la pteición"} variant={"error"}/>
+  <SnackBar msg={"Ocurrió un error en la petición"} variant={"error"}/>
   </>
   );
 
@@ -36,22 +39,35 @@ export const Users = () => {
     )
   }
 
-  const handleOpenForm = (show: boolean) => {
+  const handleOpenForm = (show: boolean, userId: number) => {
+    console.log(userId);
+    
     setShowForm(show);
+    userId !== undefined ? setUserId(userId) : setUserId(0)
+  };
+
+  const handleOpenDialog = (show: boolean, userId: number) => {
+    setShowDialog(show);
+    userId !== undefined ? setUserId(userId) : setUserId(0)
   };
 
   const handleCloseForm = () => {
     setShowForm(false);
   };
 
+  const handleCloseDialog = () => {
+    setShowDialog(false);
+  };
+
   return (
     <>
     {users ? (
-        <Table data={users} columns={columns} handleOpenForm={handleOpenForm} />
+        <Table data={users} columns={columns} handleOpenForm={handleOpenForm} handleOpenDialog={handleOpenDialog} />
       ) : (
         "No hay información para mostrar"
       )}
-      {showForm && <FormUsers show={showForm} onClose={handleCloseForm} />}
+      {showForm && <FormUsers show={showForm} userId={userId} onClose={handleCloseForm} getSingleEndpoint={"adminUser-update"}/>}
+      {showDialog && <ConfirmationDialog show={showDialog} Id={userId} onClose={handleCloseDialog} endpoint={"adminUser-delete"}/>}
     </>
 
   );

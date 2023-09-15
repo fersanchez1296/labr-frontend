@@ -9,26 +9,18 @@ import CloseIcon from "@mui/icons-material/Close";
 import Slide from "@mui/material/Slide";
 import { TransitionProps } from "@mui/material/transitions";
 import Box from "@mui/material/Box";
-import { grey, green, red } from "@mui/material/colors";
+import { grey, green } from "@mui/material/colors";
 import { Grid } from "@mui/material";
-import Paper from "@mui/material/Paper";
-import { styled } from "@mui/material/styles";
 import { Formik, Form } from "formik";
 import { CustomInput } from "../customInput/CustomInput";
 import { userInitialValues } from "../../models/userInitialValues";
 import { CustomSelect } from "../customSelect/CustomSelect";
 import { userSchema } from "../../schemas/user.schema";
 import CircularProgress from "@mui/material/CircularProgress";
-import { useCreateUserMutation } from "../../api/api.slice";
+import { useNewQueryMutation, useGetSingleQuery,useUpdateQueryMutation } from "../../api/api.slice";
 import { SnackBar } from "../snackBar/SnackBar";
-
-const Item = styled(Paper)(({ theme }) => ({
-  backgroundColor: theme.palette.mode === "dark" ? "transparent" : "#fff",
-  ...theme.typography.body2,
-  padding: theme.spacing(1),
-  textAlign: "center",
-  color: theme.palette.text.secondary,
-}));
+import { Item } from "../../utilities/item.utilities";
+import { Spiner } from "../spiner/Spiner";
 
 const Transition = React.forwardRef(function Transition(
   props: TransitionProps & {
@@ -39,23 +31,74 @@ const Transition = React.forwardRef(function Transition(
   return <Slide direction="up" ref={ref} {...props} />;
 });
 
-export const FormUsers = ({ show, onClose }: { show: boolean; onClose: () => void }) => {
-  const handleClose = () => {
-    onClose();
-  };
+interface Props {
+  show: boolean;
+  onClose: () => void;
+  userId: number,
+  getSingleEndpoint : string;
 
-  const [createUser, { isError, error, isSuccess }] = useCreateUserMutation();
+}
+
+export const FormUsers = ({ show, onClose, userId,getSingleEndpoint }: Props) => {
+  console.log(getSingleEndpoint)
+  const endpoint = "adminUser-update"
+  const handleClose = () => {onClose()};
+  
+  const [newQuery, { isError : isErrorCreate, isSuccess : isSuccessCreate }] = useNewQueryMutation();
+  const {
+    data: users,
+    isError: isErrorUser,
+    isLoading,
+    error: errorUser,
+  } = useGetSingleQuery({endpoint, id : userId});
+  const [updateQuery,{isError : errorUpdate, isSuccess : successUpdate}] = useUpdateQueryMutation()
+
+
+  if (isLoading) {
+    return (
+      <>
+        <Spiner showSpiner />
+        <SnackBar
+          msg={"Usuario encontrado en la base de datos"}
+          variant={"success"}
+        />
+      </>
+    );
+  }
+
+  
+
+  if (isErrorUser || users === undefined) {
+    return (
+      <>
+        <div>{`Error ${errorUser}`}</div>
+        <SnackBar msg={"Ocurrió un error en la petición"} variant={"error"} />
+      </>
+    );
+  }
+
+  
 
   return (
-    <div>
-      <Dialog fullScreen open={show} onClose={handleClose} TransitionComponent={Transition}>
+    <>
+      <Dialog
+        fullScreen
+        open={show}
+        onClose={handleClose}
+        TransitionComponent={Transition}
+      >
         <AppBar sx={{ position: "relative" }}>
           <Toolbar>
-            <IconButton edge="start" color="inherit" onClick={handleClose} aria-label="close">
+            <IconButton
+              edge="start"
+              color="inherit"
+              onClick={handleClose}
+              aria-label="close"
+            >
               <CloseIcon />
             </IconButton>
-            <Typography sx={{ ml: 2, flex: 1 }} variant="h6" component="div">
-              Nuevo Usuario
+            <Typography sx={{ ml: 2, flex: 1 }} variant="h4" component="div">
+              {userId === 0 ? "Nevo Usuario" : "Editar Usuario"}
             </Typography>
           </Toolbar>
         </AppBar>
@@ -72,24 +115,23 @@ export const FormUsers = ({ show, onClose }: { show: boolean; onClose: () => voi
           <Formik
             validationSchema={userSchema}
             enableReinitialize={true}
-            initialValues={userInitialValues}
-            onSubmit={async (values, { setSubmitting,resetForm }) => {
-              try {
-                setSubmitting(true);
-                await createUser(values);
-                resetForm()
-              } catch (error) {
-                console.log(error);
-              } finally {
-                setSubmitting(false);
-                
-              }
+            initialValues={userId !== 0 ? users[0] : userInitialValues}
+            onSubmit={async (values, { setSubmitting, resetForm }) => {
+                try {
+                  setSubmitting(true);
+                  userId === 0 ? await newQuery(values) : await updateQuery(values);
+                } catch (error) {
+                  console.log(error);
+                } finally {
+                  setSubmitting(false);
+                  resetForm();
+                }
             }}
           >
             {({ handleSubmit, handleChange, values, isSubmitting }) => (
               <Form onSubmit={handleSubmit}>
                 <Grid container spacing={1}>
-                <CustomInput
+                  <CustomInput
                     id="codigo"
                     label="Código"
                     name="codigo"
@@ -195,8 +237,38 @@ export const FormUsers = ({ show, onClose }: { show: boolean; onClose: () => voi
           </Formik>
         </Box>
       </Dialog>
-      {isSuccess ? <SnackBar variant="success"  msg="Se agregó la información exitosamente" /> : ""}
-      {isError ? <SnackBar variant="error"  msg="Ocurrió un error al agregar la información" /> : ""}
-    </div>
+      {isSuccessCreate ? (
+        <SnackBar
+          variant="success"
+          msg="Se agregó la información exitosamente"
+        />
+      ) : (
+        ""
+      )}
+      {isErrorCreate ? (
+        <SnackBar
+          variant="error"
+          msg="Ocurrió un error al agregar la información"
+        />
+      ) : (
+        ""
+      )}
+      {successUpdate ? (
+        <SnackBar
+          variant="success"
+          msg="Se modificó el usuario exitosamente"
+        />
+      ) : (
+        ""
+      )}
+      {errorUpdate ? (
+        <SnackBar
+          variant="error"
+          msg="Ocurrió un error al modificar el usuario"
+        />
+      ) : (
+        ""
+      )}
+    </>
   );
 };
