@@ -10,12 +10,16 @@ import Slide from "@mui/material/Slide";
 import { TransitionProps } from "@mui/material/transitions";
 import Box from "@mui/material/Box";
 import { grey, green } from "@mui/material/colors";
+import TextField from "@mui/material/TextField";
 import { Grid } from "@mui/material";
+import Paper from "@mui/material/Paper";
+import { styled } from "@mui/material/styles";
 import { Formik, Form } from "formik";
+import MenuItem from "@mui/material/MenuItem";
+import { subjectsInitialValues } from "../../models/subjectsInitialValues";
+import { subjectsSchema } from "../../schemas/subjects.schema";
 import { CustomInput } from "../customInput/CustomInput";
-import { subjectInitialValues } from "../../models/subjectsInitialValues";
 import { CustomSelect } from "../customSelect/CustomSelect";
-import { subjectSchema } from "../../schemas/subjects.schema";
 import CircularProgress from "@mui/material/CircularProgress";
 import {
   useNewQueryMutation,
@@ -23,8 +27,15 @@ import {
   useUpdateQueryMutation,
 } from "../../api/api.slice";
 import { SnackBar } from "../snackBar/SnackBar";
-import { Item } from "../../utilities/item.utilities";
 import { Spiner } from "../spiner/Spiner";
+
+const Item = styled(Paper)(({ theme }) => ({
+  backgroundColor: theme.palette.mode === "dark" ? "transparent" : "#fff",
+  ...theme.typography.body2,
+  padding: theme.spacing(1),
+  textAlign: "center",
+  color: theme.palette.text.secondary,
+}));
 
 const Transition = React.forwardRef(function Transition(
   props: TransitionProps & {
@@ -38,47 +49,58 @@ const Transition = React.forwardRef(function Transition(
 interface Props {
   show: boolean;
   onClose: () => void;
-  itemId: number;
+  userId: number;
+  endpoint: string;
 }
 
-export const FormMaterias = ({ show, onClose, itemId }: Props) => {
+export const FormMaterias = ({ show, onClose, userId, endpoint }: Props) => {
   const handleClose = () => {
     onClose();
   };
 
-  const [newQuery, { isError: isErrorCreate, isSuccess: isSuccessCreate }] =
-    useNewQueryMutation();
+  const [
+    newQuery,
+    {
+      data: infoQueryCreate,
+      isError: isErrorCreate,
+      isSuccess: isSuccessCreate,
+    },
+  ] = useNewQueryMutation();
   const {
-    data: subjects,
-    isError: isErrorSubject,
+    data: users,
+    isError: isErrorUser,
     isLoading,
-    error: errorSubject,
-  } = useGetSingleQuery(itemId);
-  const [updateQuery, { isError: errorUpdate, isSuccess: successUpdate }] =
-    useUpdateQueryMutation();
+    error: errorUser,
+  } = useGetSingleQuery({ endpoint: endpoint + "-getOne", id: userId });
+  const [
+    updateQuery,
+    { data: infoQuery, isError: errorUpdate, isSuccess: successUpdate },
+  ] = useUpdateQueryMutation();
 
   if (isLoading) {
     return (
       <>
         <Spiner showSpiner />
         <SnackBar
-          msg={"Información encontrada en la base de datos"}
+          msg={"Usuario encontrado en la base de datos"}
           variant={"success"}
         />
       </>
     );
   }
 
-  if (isErrorSubject || subjects === undefined) {
+  if (isErrorUser || users === undefined) {
     return (
       <>
-        <div>{`Error ${errorSubject}`}</div>
+        <div>{`Error ${errorUser}`}</div>
         <SnackBar msg={"Ocurrió un error en la petición"} variant={"error"} />
       </>
     );
   }
+
+  console.log(users);
   return (
-    <>
+    <div>
       <Dialog
         fullScreen
         open={show}
@@ -96,7 +118,7 @@ export const FormMaterias = ({ show, onClose, itemId }: Props) => {
               <CloseIcon />
             </IconButton>
             <Typography sx={{ ml: 2, flex: 1 }} variant="h4" component="div">
-              {itemId === 0 ? "Nueva Materia" : "Editar Materia"}
+              {userId === 0 ? "Nueva Materia" : "Editar Materia"}
             </Typography>
           </Toolbar>
         </AppBar>
@@ -111,43 +133,61 @@ export const FormMaterias = ({ show, onClose, itemId }: Props) => {
           }}
         >
           <Formik
-            validationSchema={subjectSchema}
+            validationSchema={subjectsSchema}
             enableReinitialize={true}
-            initialValues={itemId !== 0 ? subjects[0] : subjectInitialValues}
-            onSubmit={async (values, { setSubmitting, resetForm }) => {
+            initialValues={
+              userId !== 0 ? users.result[0] : subjectsInitialValues
+            }
+            onSubmit={async (values, { setSubmitting, setValues }) => {
               try {
                 setSubmitting(true);
-                itemId === 0
-                  ? await newQuery(values)
-                  : await updateQuery(values);
+                userId === 0
+                  ? await newQuery({ endpoint: endpoint + "-create", values })
+                  : await updateQuery({
+                      endpoint: endpoint + "-update",
+                      values,
+                    });
               } catch (error) {
                 console.log(error);
               } finally {
                 setSubmitting(false);
-                resetForm();
+                setTimeout(() => {
+                  handleClose();
+                }, 2000);
+                setValues(subjectsInitialValues);
               }
             }}
           >
             {({ handleSubmit, handleChange, values, isSubmitting }) => (
               <Form onSubmit={handleSubmit}>
-                <Grid container spacing={5}>
+                <Grid container spacing={1}>
                   <CustomInput
                     id="crn"
                     label="CRN"
                     name="crn"
                     value={values.crn}
                     onChange={handleChange}
-                    size={6}
+                    size={4}
                     type="number"
                   />
                   <CustomInput
+                    id="clave"
+                    label="Clave"
+                    name="clave"
+                    value={values.clave}
+                    onChange={handleChange}
+                    size={4}
+                    type="text"
+                  />
+                  <CustomSelect
                     id="semestre"
                     label="Semestre"
                     name="semestre"
+                    values={users.grupos}
                     value={values.semestre}
                     onChange={handleChange}
-                    size={6}
-                    type="text"
+                    size={4}
+                    type="select"
                   />
                   <CustomInput
                     id="nombre"
@@ -158,15 +198,15 @@ export const FormMaterias = ({ show, onClose, itemId }: Props) => {
                     size={12}
                     type="text"
                   />
-
-                  <CustomInput
+                  <CustomSelect
                     id="carrera"
                     label="Carrera"
                     name="carrera"
-                    value={values.carrera}
+                    values={users.carreras}
+                    value={values.semestre}
                     onChange={handleChange}
                     size={12}
-                    type="text"
+                    type="select"
                   />
 
                   <Grid item xs={12}>
@@ -201,7 +241,7 @@ export const FormMaterias = ({ show, onClose, itemId }: Props) => {
           </Formik>
         </Box>
       </Dialog>
-      {isSuccessCreate ? (
+      {infoQueryCreate && infoQueryCreate.success ? (
         <SnackBar
           variant="success"
           msg="Se agregó la información exitosamente"
@@ -217,19 +257,12 @@ export const FormMaterias = ({ show, onClose, itemId }: Props) => {
       ) : (
         ""
       )}
-      {successUpdate ? (
-        <SnackBar variant="success" msg="Se modificó la información exitosamente" />
+      {infoQuery && infoQuery.success ? (
+        <SnackBar variant="success" msg={infoQuery.message} />
       ) : (
         ""
       )}
-      {errorUpdate ? (
-        <SnackBar
-          variant="error"
-          msg="Ocurrió un error al modificar la información"
-        />
-      ) : (
-        ""
-      )}
-    </>
+      {errorUpdate ? <SnackBar variant="error" msg={infoQuery.message} /> : ""}
+    </div>
   );
 };

@@ -15,12 +15,12 @@ interface Props {
   show: boolean;
   onClose: () => void;
   Id: number;
-  endpoint : string;
+  endpoint: string;
 }
 
-export const ConfirmationDialog = ({ show, onClose, Id,endpoint }: Props) => {
-  const [deleteQuery, {data, isLoading, isError, isSuccess, error }] =
-  useDeleteQueryMutation();
+export const ConfirmationDialog = ({ show, onClose, Id, endpoint }: Props) => {
+  const [deleteQuery, { data : infoQuery, isLoading, isError, isSuccess, error }] =
+    useDeleteQueryMutation();
   const [open, setOpen] = React.useState(false);
   const theme = useTheme();
   const fullScreen = useMediaQuery(theme.breakpoints.down("md"));
@@ -28,39 +28,18 @@ export const ConfirmationDialog = ({ show, onClose, Id,endpoint }: Props) => {
   React.useEffect(() => {
     setOpen(show);
   }, []);
-
-    
-
-    if (isLoading) {
-      return <Spiner showSpiner />;
-    }
-    if (isError) {
-      console.log(error);
-      return (
-        <SnackBar msg={"Ocurrió un error en la petición"} variant={"error"} />
-      );
-    }
-    if (data) {
-      console.log(data);
-      return (
-        <SnackBar msg={`Ocurrió un error en la petición:
-        ${data[0]} - code ${data[1]}`} variant={"error"} />
-      );
-    }
-
-    if (isSuccess)
-      return (
-        <SnackBar
-          msg={`Información eliminada de la base de datos`}
-          variant={"success"}
-        />
-      )
-
-  const handleClose = async() => {
-    await deleteQuery({endpoint,Id})
-    onClose()
+  if (isLoading) {
+    return <Spiner showSpiner />;
   }
 
+  const handleClose = async () => {
+    onClose();
+  };
+
+  const handleCloseAndDelete = async () => {
+    await deleteQuery({ endpoint, Id });
+    onClose();
+  };
   return (
     <>
       <Dialog
@@ -80,11 +59,24 @@ export const ConfirmationDialog = ({ show, onClose, Id,endpoint }: Props) => {
           <Button autoFocus onClick={handleClose}>
             Cancelar
           </Button>
-          <Button onClick={handleClose} autoFocus>
+          <Button onClick={handleCloseAndDelete} autoFocus>
             Aceptar
           </Button>
         </DialogActions>
       </Dialog>
+      {infoQuery && infoQuery.success ? (
+        <SnackBar variant="success" msg={infoQuery.message} />
+      ) : (
+        ""
+      )}
+      {isError ? (
+        <SnackBar
+          variant="error"
+          msg={infoQuery.message}
+        />
+      ) : (
+        ""
+      )}
     </>
   );
 };

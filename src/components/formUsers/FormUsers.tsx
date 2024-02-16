@@ -17,7 +17,11 @@ import { userInitialValues } from "../../models/userInitialValues";
 import { CustomSelect } from "../customSelect/CustomSelect";
 import { userSchema } from "../../schemas/user.schema";
 import CircularProgress from "@mui/material/CircularProgress";
-import { useNewQueryMutation, useGetSingleQuery,useUpdateQueryMutation } from "../../api/api.slice";
+import {
+  useNewQueryMutation,
+  useGetSingleQuery,
+  useUpdateQueryMutation,
+} from "../../api/api.slice";
 import { SnackBar } from "../snackBar/SnackBar";
 import { Item } from "../../utilities/item.utilities";
 import { Spiner } from "../spiner/Spiner";
@@ -34,25 +38,31 @@ const Transition = React.forwardRef(function Transition(
 interface Props {
   show: boolean;
   onClose: () => void;
-  userId: number,
-  getSingleEndpoint : string;
-
+  userId: number;
+  getSingleEndpoint: string;
 }
 
-export const FormUsers = ({ show, onClose, userId,getSingleEndpoint }: Props) => {
-  console.log(getSingleEndpoint)
-  const endpoint = "adminUser-update"
-  const handleClose = () => {onClose()};
-  
-  const [newQuery, { isError : isErrorCreate, isSuccess : isSuccessCreate }] = useNewQueryMutation();
+export const FormUsers = (  {
+  show,
+  onClose,
+  userId,
+  getSingleEndpoint,
+}: Props) => {
+  const handleClose = () => {
+    onClose();
+  };
+  const [newQuery, {data : infoQueryCreate, isError: isErrorCreate, isSuccess: isSuccessCreate }] =
+    useNewQueryMutation();
   const {
     data: users,
     isError: isErrorUser,
     isLoading,
     error: errorUser,
-  } = useGetSingleQuery({endpoint, id : userId});
-  const [updateQuery,{isError : errorUpdate, isSuccess : successUpdate}] = useUpdateQueryMutation()
-
+  } = useGetSingleQuery({ endpoint : getSingleEndpoint + "-getOne", id: userId });
+  const [
+    updateQuery,
+    { data: infoQuery, isError: errorUpdate, isSuccess: successUpdate },
+  ] = useUpdateQueryMutation();
 
   if (isLoading) {
     return (
@@ -66,9 +76,7 @@ export const FormUsers = ({ show, onClose, userId,getSingleEndpoint }: Props) =>
     );
   }
 
-  
-
-  if (isErrorUser || users === undefined) {
+  if (isErrorUser || users.users === undefined) {
     return (
       <>
         <div>{`Error ${errorUser}`}</div>
@@ -77,8 +85,8 @@ export const FormUsers = ({ show, onClose, userId,getSingleEndpoint }: Props) =>
     );
   }
 
-  
 
+  console.log(users.users)
   return (
     <>
       <Dialog
@@ -115,17 +123,22 @@ export const FormUsers = ({ show, onClose, userId,getSingleEndpoint }: Props) =>
           <Formik
             validationSchema={userSchema}
             enableReinitialize={true}
-            initialValues={userId !== 0 ? users[0] : userInitialValues}
-            onSubmit={async (values, { setSubmitting, resetForm }) => {
-                try {
-                  setSubmitting(true);
-                  userId === 0 ? await newQuery(values) : await updateQuery(values);
-                } catch (error) {
-                  console.log(error);
-                } finally {
-                  setSubmitting(false);
-                  resetForm();
-                }
+            initialValues={userId !== 0 ? users.users[0] : userInitialValues}
+            onSubmit={async (values, { setSubmitting, setValues }) => {
+              try {
+                setSubmitting(true);
+                userId === 0
+                  ? await newQuery({ endpoint : getSingleEndpoint + "-create", values })
+                  : await updateQuery({ endpoint : getSingleEndpoint + "-update", values });
+              } catch (error) {
+                console.log(error);
+              } finally {
+                setSubmitting(false);
+                setTimeout(() => {
+                  handleClose();
+                }, 2000);
+                setValues(userInitialValues);
+              }
             }}
           >
             {({ handleSubmit, handleChange, values, isSubmitting }) => (
@@ -145,6 +158,7 @@ export const FormUsers = ({ show, onClose, userId,getSingleEndpoint }: Props) =>
                     id="rol"
                     label="Rol de usuario"
                     name="rol_id"
+                    values={users.rols}
                     value={values.rol_id}
                     onChange={handleChange}
                     size={6}
@@ -196,10 +210,10 @@ export const FormUsers = ({ show, onClose, userId,getSingleEndpoint }: Props) =>
                     type="number"
                   />
                   <CustomInput
-                    id="email"
-                    label="Email"
-                    name="email"
-                    value={values.email}
+                    id="correo"
+                    label="Correo"
+                    name="correo"
+                    value={values.correo}
                     onChange={handleChange}
                     size={12}
                     type="email"
@@ -237,7 +251,7 @@ export const FormUsers = ({ show, onClose, userId,getSingleEndpoint }: Props) =>
           </Formik>
         </Box>
       </Dialog>
-      {isSuccessCreate ? (
+      {infoQueryCreate && infoQueryCreate.success ? (
         <SnackBar
           variant="success"
           msg="Se agregó la información exitosamente"
@@ -253,11 +267,8 @@ export const FormUsers = ({ show, onClose, userId,getSingleEndpoint }: Props) =>
       ) : (
         ""
       )}
-      {successUpdate ? (
-        <SnackBar
-          variant="success"
-          msg="Se modificó el usuario exitosamente"
-        />
+      {infoQuery && infoQuery.success ? (
+        <SnackBar variant="success" msg="Se modificó el usuario exitosamente" />
       ) : (
         ""
       )}

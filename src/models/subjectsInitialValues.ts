@@ -3,12 +3,14 @@ interface subjectValues {
     nombre: string;
     semestre: string;
     carrera: string;
+    clave: string;
   }
   
-  export const subjectInitialValues: subjectValues = {
+  export const subjectsInitialValues: subjectValues = {
     crn: "",
     nombre: "",
     semestre: "",
     carrera: "",
+    clave: "",
   };
   

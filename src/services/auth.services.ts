@@ -1,5 +1,16 @@
-const baseUrl = 'http://localhost:3001/users';
+const baseUrl = 'http://localhost:4000/login';
 
-export const getMorty = () => {
-  return fetch(baseUrl).then(res => res.json());
+export const getRolUser = (codigo, password) => {
+  const requestOptions = {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+      codigo: codigo,
+      password: password,
+    }),
+  };
+
+  return fetch(baseUrl, requestOptions).then(res => res.json());
 };

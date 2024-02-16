@@ -12,11 +12,11 @@ interface Props {
   size: number;
   type: string;
   id: string;
+  values: any;
 }
 
-
-
-export const CustomSelect = ({ size, ...props }: Props) => {
+export const CustomSelect = ({ size, values, ...props }: Props) => {
+  console.log(values)
   const [field, meta] = useField(props);
   return (
     <>
@@ -32,9 +32,12 @@ export const CustomSelect = ({ size, ...props }: Props) => {
             <MenuItem disabled value="">
               Selecciona el rol del usuario
             </MenuItem>
-            <MenuItem value={1}>ADMINISTRADOR</MenuItem>
-            <MenuItem value={2}>PROFESOR</MenuItem>
-            <MenuItem value={3}>ALUMNO</MenuItem>
+            {values.map((value,index) => {
+              return <MenuItem value={index + 1}>{value}</MenuItem>;
+            })}
+
+            {/* <MenuItem value={2}>PROFESOR</MenuItem>
+            <MenuItem value={3}>ALUMNO</MenuItem> */}
           </TextField>
           {meta.touched && meta.error && (
             <div className="error">{meta.error}</div>

@@ -15,9 +15,10 @@ import { SnackbarProvider } from 'notistack';
 
 function App() {
   return (
-    <SnackbarProvider maxSnack={1}>
+    
       <ApiProvider api={apiSlice}>
       <Provider store={store}>
+      <SnackbarProvider maxSnack={1}>
       <BrowserRouter>
           <Routes>
             <Route path="/" element={<Login />} />
@@ -50,9 +51,10 @@ function App() {
             </Route>
           </Routes>
         </BrowserRouter>
+        </SnackbarProvider>
     </Provider>
     </ApiProvider>
-    </SnackbarProvider>
+   
     
   );
 }

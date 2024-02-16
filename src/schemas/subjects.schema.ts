@@ -1,7 +1,7 @@
 import * as yup from "yup";
 import { regexNames } from "../utilities/regexForNames.utilities";
 
-export const subjectSchema = yup.object().shape({
+export const subjectsSchema = yup.object().shape({
   crn: yup
     .number()
     .integer("Debes ingresar un valor entero")
@@ -15,9 +15,12 @@ export const subjectSchema = yup.object().shape({
     .min(2, "El nombre debe tener al menos dos caractéres")
     .required("Este campo es requerido"),
   semestre: yup
-    .number()
-    .integer("Debes ingresar un valor entero")
-    .positive("Debes ingresar un valor positivo")
+    .string()
+    .min(2, "El Semestre debe tener al menos dos caractéres")
+    .required("Este campo es requerido"),
+  clave: yup
+    .string()
+    .min(2, "La clave debe tener al menos dos caractéres")
     .required("Este campo es requerido"),
   carrera: yup
     .string()

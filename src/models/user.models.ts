@@ -1,4 +1,5 @@
 export interface UserInfo{
-    nombre : string,
+    codigo : string,
+    password : string,
     rol : string
 }

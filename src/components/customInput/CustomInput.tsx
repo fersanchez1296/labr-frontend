@@ -11,6 +11,7 @@ interface Props {
   size : number
   type : string
   id : string
+  disabled? : Boolean
 }
 
 export const CustomInput = ({ size,value, ...props }: Props) => {

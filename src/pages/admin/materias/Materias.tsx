@@ -8,12 +8,11 @@ import { ConfirmationDialog } from "../../../components/confirmationDialog/Confi
 import { SnackBar } from "../../../components/snackBar/SnackBar";
 
 export const Materias = () => {
-  const endpointName = "adminSubjects";
-  const { data: subjects, isError, isLoading, error } = useGetAllQuery(endpointName);
+  const endpoint = "adminSubjects";
+  const { data: subjects, isError, isLoading, error } = useGetAllQuery(endpoint);
   const [showForm, setShowForm] = useState(false);
   const [showDialog, setShowDialog] = useState(false);
   const [itemId, setItemId] = useState(0)
-
 
   if (isLoading) {
     return (
@@ -40,10 +39,8 @@ export const Materias = () => {
   }
 
   const handleOpenForm = (show: boolean, Id: number) => {
-    console.log(Id);
-    
     setShowForm(show);
-    Id !== undefined ? setItemId(Id) : setItemId(0)
+    Id !== undefined ? setItemId(Id) : setItemId(0);
   };
 
   const handleOpenDialog = (show: boolean, Id: number) => {
@@ -59,6 +56,7 @@ export const Materias = () => {
     setShowDialog(false);
   };
 
+  console.log(subjects)
   return (
     <>
     {subjects ? (
@@ -66,8 +64,8 @@ export const Materias = () => {
       ) : (
         "No hay información para mostrar"
       )}
-      {showForm && <FormMaterias show={showForm} itemId={itemId} onClose={handleCloseForm}/>}
-      {showDialog && <ConfirmationDialog show={showDialog} Id={itemId} onClose={handleCloseDialog} endpoint={"adminUser-delete"}/>}
+      {showForm && <FormMaterias show={showForm} userId={itemId} onClose={handleCloseForm} endpoint={endpoint}/>}
+      {showDialog && <ConfirmationDialog show={showDialog} Id={itemId} onClose={handleCloseDialog} endpoint={endpoint + "-delete"}/>}
     </>
 
   );

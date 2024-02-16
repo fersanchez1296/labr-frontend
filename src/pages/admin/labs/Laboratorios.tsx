@@ -1,37 +1,73 @@
-import { useGetLabsQuery } from "../../../api/api.slice";
 import { Spiner } from "../../../components/spiner/Spiner";
-import { FormLab } from "../../../components/formLab/FormLab";
 import { useState } from "react";
 import { Table } from "../../../components/table/Table";
 import { columns } from "../../../models/labTableInfo.model";
+import { SnackBar } from "../../../components/snackBar/SnackBar";
+import { ConfirmationDialog } from "../../../components/confirmationDialog/ConfirmationDialog";
+import { useGetAllQuery } from "../../../api/api.slice";
+import {FormLab} from "../../../components/formLab/FormLab"
 
 export const Laboratorios = () => {
-  const { data: labs, isError, isLoading, error } = useGetLabsQuery({});
+  const endpoint = "AdminLabs"; 
+  const { data: users, isError, isLoading, error } = useGetAllQuery(endpoint);
   const [showForm, setShowForm] = useState(false);
+  const [showDialog, setShowDialog] = useState(false);
+  const [userId, setUserId] = useState(0)
 
-  if (isLoading) return <Spiner showSpiner />;
-  if (isError) return <div>{`Error ${console.log(error)}`}</div>;
 
-  if (!labs) {
-    return <h2>No hay Información en la Base de Datos</h2>;
+  if (isLoading) {
+    return (
+      <>
+        <Spiner showSpiner />
+        <SnackBar msg={"Información encontrada en la base de datos"} variant={"success"}/>
+      </>
+    );
+  }
+  if (isError) return(
+  <>
+  <div>{`Error ${error}`}</div>
+  <SnackBar msg={"Ocurrió un error en la petición"} variant={"error"}/>
+  </>
+  );
+
+  if (!users) {
+    return (
+      <>
+      <h2>Sin contenido</h2>
+      <SnackBar msg={"No hay información en la base de datos"} variant={"warning"}/>
+      </>
+    )
   }
 
-  const handleOpenForm = (show: boolean) => {
+  const handleOpenForm = (show: boolean, userId: number) => {
+    console.log(userId);
     setShowForm(show);
+    userId !== undefined ? setUserId(userId) : setUserId(0)
+  };
+
+  const handleOpenDialog = (show: boolean, userId: number) => {
+    setShowDialog(show);
+    userId !== undefined ? setUserId(userId) : setUserId(0)
   };
 
   const handleCloseForm = () => {
     setShowForm(false);
   };
 
+  const handleCloseDialog = () => {
+    setShowDialog(false);
+  };
+
   return (
     <>
-      {labs ? (
-        <Table data={labs} handleOpenForm={handleOpenForm} columns={columns}/>
+    {users ? (
+        <Table data={users} columns={columns} handleOpenForm={handleOpenForm} handleOpenDialog={handleOpenDialog} />
       ) : (
         "No hay información para mostrar"
       )}
-      {showForm && <FormLab show={showForm} onClose={handleCloseForm} />}
+      {showForm && <FormLab show={showForm} userId={userId} onClose={handleCloseForm} endpoint={endpoint}/>}
+      {showDialog && <ConfirmationDialog show={showDialog} Id={userId} onClose={handleCloseDialog} endpoint={endpoint + "-delete"}/>}
     </>
+
   );
-}
+};

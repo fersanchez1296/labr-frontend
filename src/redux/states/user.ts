@@ -4,7 +4,8 @@ import { clearLocalStorage, persistLocalStorage } from "../../utilities/localSto
 
 
 export const EmptyUserState : UserInfo = {
-    nombre : "",
+    codigo : "",
+    password : "",
     rol : ""
 }
 

@@ -9,13 +9,25 @@ import CloseIcon from "@mui/icons-material/Close";
 import Slide from "@mui/material/Slide";
 import { TransitionProps } from "@mui/material/transitions";
 import Box from "@mui/material/Box";
-import { grey } from "@mui/material/colors";
+import { grey,green } from "@mui/material/colors";
 import TextField from "@mui/material/TextField";
 import { Grid } from "@mui/material";
 import Paper from "@mui/material/Paper";
 import { styled } from "@mui/material/styles";
 import { Formik, Form } from "formik";
 import MenuItem from "@mui/material/MenuItem";
+import { equipoInitialValues } from "../../models/equipoInitialValues";
+import { equipoSchema } from "../../schemas/equipo.schema";
+import { CustomInput } from "../customInput/CustomInput";
+import { CustomSelect } from "../customSelect/CustomSelect";
+import CircularProgress from "@mui/material/CircularProgress";
+import {
+  useNewQueryMutation,
+  useGetSingleQuery,
+  useUpdateQueryMutation,
+} from "../../api/api.slice";
+import { SnackBar } from "../snackBar/SnackBar";
+import { Spiner } from "../spiner/Spiner";
 
 const Item = styled(Paper)(({ theme }) => ({
   backgroundColor: theme.palette.mode === "dark" ? "transparent" : "#fff",
@@ -34,32 +46,58 @@ const Transition = React.forwardRef(function Transition(
   return <Slide direction="up" ref={ref} {...props} />;
 });
 
-export const FormEquipo = ({
-  show,
-  onClose,
-}: {
+interface Props {
   show: boolean;
   onClose: () => void;
-}) => {
+  userId: number;
+  getSingleEndpoint : string;
+}
+
+export const FormEquipo = (  {
+  show,
+  onClose,
+  userId,
+  getSingleEndpoint
+}: Props) => {
   const handleClose = () => {
     onClose();
   };
 
-  const currencies = [
-    {
-      value: "1",
-      label: "Administrador",
-    },
-    {
-      value: "2",
-      label: "Profesor",
-    },
-    {
-      value: "3",
-      label: "Alumno",
-    },
-  ];
+  const [newQuery, {data : infoQueryCreate, isError: isErrorCreate, isSuccess: isSuccessCreate }] =
+    useNewQueryMutation();
+  const {
+    data: users,
+    isError: isErrorUser,
+    isLoading,
+    error: errorUser,
+  } = useGetSingleQuery({ endpoint : getSingleEndpoint + "-getOne", id: userId });
+  const [
+    updateQuery,
+    { data: infoQuery, isError: errorUpdate, isSuccess: successUpdate },
+  ] = useUpdateQueryMutation();
 
+  if (isLoading) {
+    return (
+      <>
+        <Spiner showSpiner />
+        <SnackBar
+          msg={"Usuario encontrado en la base de datos"}
+          variant={"success"}
+        />
+      </>
+    );
+  }
+
+  if (isErrorUser || users === undefined) {
+    return (
+      <>
+        <div>{`Error ${errorUser}`}</div>
+        <SnackBar msg={"Ocurrió un error en la petición"} variant={"error"} />
+      </>
+    );
+  }
+
+  console.log(users)
   return (
     <div>
       <Dialog
@@ -78,12 +116,9 @@ export const FormEquipo = ({
             >
               <CloseIcon />
             </IconButton>
-            <Typography sx={{ ml: 2, flex: 1 }} variant="h6" component="div">
-              Nuevo Equipo
+            <Typography sx={{ ml: 2, flex: 1 }} variant="h4" component="div">
+              {userId === 0 ? "Nuevo Equipo" : "Editar Equipo"}
             </Typography>
-            <Button autoFocus color="inherit" onClick={handleClose}>
-              Guardar
-            </Button>
           </Toolbar>
         </AppBar>
         <Box
@@ -96,111 +131,130 @@ export const FormEquipo = ({
             alignItems : "center"
           }}
         >
-          <Formik initialValues={""} onSubmit={() => ""}>
-            <Form>
-              <Grid container spacing={4}>
-                <Grid item xs={6}>
-                  <Item>
-                    <TextField
-                      id="codigo"
-                      label="Código"
-                      variant="outlined"
-                      sx={{ width: "100%", height: "100%" }}
-                    />
-                  </Item>
-                </Grid>
-                <Grid item xs={6}>
-                  <Item>
-                    <TextField
-                      id="rol"
-                      select
-                      label="Rol"
-                      defaultValue={1}
-                      sx={{ width: "100%", height: "100%" }}
-                    >
-                      {currencies.map((option) => (
-                        <MenuItem key={option.value} value={option.value}>
-                          {option.label}
-                        </MenuItem>
-                      ))}
-                    </TextField>
-                  </Item>
-                </Grid>
-                <Grid item xs={12}>
-                  <Item>
-                    <TextField
-                      id="nombre"
-                      label="Nombre"
-                      variant="outlined"
-                      sx={{ width: "100%", height: "100%" }}
-                    />
-                  </Item>
-                </Grid>
-                <Grid item xs={6}>
-                  <Item>
-                    <TextField
-                      id="apellido-1"
-                      label="Apellido 1"
-                      variant="outlined"
-                      sx={{ width: "100%", height: "100%" }}
-                    />
-                  </Item>
-                </Grid>
-                <Grid item xs={6}>
-                  <Item>
-                    <TextField
-                      id="apellido-2"
-                      label="Apellido 2"
-                      variant="outlined"
-                      sx={{ width: "100%", height: "100%" }}
-                    />
-                  </Item>
-                </Grid>
-                <Grid item xs={6}>
-                  <Item>
-                    <TextField
-                      id="password"
-                      label="Contraseña"
-                      type="password"
-                      sx={{ width: "100%", height: "100%" }}
-                    />
-                  </Item>
-                </Grid>
-                <Grid item xs={6}>
-                  <Item>
-                    <TextField
-                      id="confirm-password"
-                      label="Confima tu contraseña"
-                      type="password"
-                      sx={{ width: "100%", height: "100%" }}
-                    />
-                  </Item>
-                </Grid>
-                <Grid item xs={6}>
-                  <Item>
-                    <TextField
-                      id="email"
-                      label="Email"
-                      variant="outlined"
-                      sx={{ width: "100%", height: "100%" }}
-                    />
-                  </Item>
-                </Grid>
-                <Grid item xs={6}>
-                  <Item>
-                    <TextField
-                      id="telefono"
-                      label="Teléfono"
-                      variant="outlined"
-                      sx={{ width: "100%", height: "100%" }}
-                    />
-                  </Item>
-                </Grid>
+          <Formik
+            validationSchema={equipoSchema}
+            enableReinitialize={true}
+            initialValues={ userId !== 0 ? users[0] : equipoInitialValues}
+            onSubmit={async (values, { setSubmitting, setValues }) => {
+              try {
+                setSubmitting(true);
+                userId === 0
+                  ? await newQuery({ endpoint : getSingleEndpoint + "-create", values })
+                  : await updateQuery({ endpoint : getSingleEndpoint + "-update", values });
+              } catch (error) {
+                console.log(error);
+              } finally {
+                setSubmitting(false);
+                setTimeout(() => {
+                  handleClose();
+                }, 2000);
+                setValues(equipoInitialValues);
+              }
+            }}
+          >
+            {({ handleSubmit, handleChange, values, isSubmitting }) => (
+            <Form onSubmit={handleSubmit}>
+            <Grid container spacing={1}>
+              <CustomInput
+                id="id"
+                label="ID"
+                name="id"
+                value={values.id}
+                onChange={handleChange}
+                size={6}
+                type="number"
+                disabled
+              />
+              <CustomInput
+                id="cantidad"
+                label="Cantidad"
+                name="cantidad"
+                value={values.cantidad}
+                onChange={handleChange}
+                size={6}
+                type="text"
+              />
+              <CustomInput
+                id="nombre"
+                label="Nombre"
+                name="nombre"
+                value={values.nombre}
+                onChange={handleChange}
+                size={12}
+                type="text"
+              />
+              <CustomInput
+                id="descripcion"
+                label="Descripción"
+                name="descripcion"
+                value={values.descripcion}
+                onChange={handleChange}
+                size={12}
+                type="text"
+              />
+              
+
+              <Grid item xs={12}>
+                <Item>
+                  <Button
+                    variant="contained"
+                    type="submit"
+                    disabled={isSubmitting}
+                    sx={{ width: "100%", height: "100%" }}
+                  >
+                    {isSubmitting ? (
+                      <CircularProgress
+                        size={24}
+                        sx={{
+                          color: green[500],
+                          position: "absolute",
+                          top: "50%",
+                          left: "50%",
+                          marginTop: "-12px",
+                          marginLeft: "-12px",
+                        }}
+                      />
+                    ) : (
+                      "Guardar"
+                    )}
+                  </Button>
+                </Item>
               </Grid>
-            </Form>
+            </Grid>
+          </Form>
+            )}
           </Formik>
         </Box>
       </Dialog>
+      {infoQueryCreate && infoQueryCreate.success ? (
+        <SnackBar
+          variant="success"
+          msg="Se agregó la información exitosamente"
+        />
+      ) : (
+        ""
+      )}
+      {isErrorCreate ? (
+        <SnackBar
+          variant="error"
+          msg="Ocurrió un error al agregar la información"
+        />
+      ) : (
+        ""
+      )}
+      {infoQuery && infoQuery.success ? (
+        <SnackBar variant="success" msg={infoQuery.message} />
+      ) : (
+        ""
+      )}
+      {errorUpdate ? (
+        <SnackBar
+          variant="error"
+          msg={infoQuery.message}
+        />
+      ) : (
+        ""
+      )}
     </div>
   );
 };

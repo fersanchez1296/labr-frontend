@@ -31,7 +31,6 @@ export const Table = ({ columns, data, handleOpenForm,handleOpenDialog }: props)
       }
       return false; // Añadimos un caso por defecto para cuando ninguna condición se cumple
     });
-    
     const id = foundElement ? (foundElement.codigo || foundElement.crn || foundElement.id) : undefined;
     handleOpenForm(true, id);
   };
@@ -47,7 +46,7 @@ export const Table = ({ columns, data, handleOpenForm,handleOpenDialog }: props)
       }else if (el.id) {
         return index + 1 === params.id ? true : false;
       }
-      return false; // Añadimos un caso por defecto para cuando ninguna condición se cumple
+      return false;
     });
     
     const id = foundElement ? (foundElement.codigo || foundElement.crn || foundElement.id) : undefined;

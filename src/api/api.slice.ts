@@ -3,7 +3,7 @@ import { createApi, fetchBaseQuery} from "@reduxjs/toolkit/query/react";
 export const apiSlice = createApi({
   reducerPath: "api",
   baseQuery: fetchBaseQuery({
-    baseUrl: 'https://reserva-laboratorios-production.up.railway.app/'
+    baseUrl: 'http://localhost:4000/'
   }),
   tagTypes: ['Users','Labs'],
   endpoints: (builder) => ({
@@ -26,10 +26,10 @@ export const apiSlice = createApi({
       providesTags: ['Users'],
     }),
     updateQuery: builder.mutation({
-      query: (user) => ({
-        url: `adminUser-update/${user.codigo}`,
+      query: ({endpoint,values}) => ({
+        url: `${endpoint}/${values.codigo || values.id || values.crn}`,
         method: 'PUT',
-        body: user,
+        body: values,
       }),
       invalidatesTags: ['Users'], // Invalida la caché de 'Users' después de realizar el PUT
     }),
@@ -41,52 +41,22 @@ export const apiSlice = createApi({
       invalidatesTags: ['Users'], // Invalidates the 'Users' cache after performing the DELETE
     }),
     newQuery: builder.mutation({
-      query: (newUser) => ({
-        url: 'adminTeacher',
+      query: ({endpoint, values}) => ({
+        url: `${endpoint}`,
         method: 'POST',
-        body: newUser,
+        body: values,
       }),
       invalidatesTags: ['Users'], // Invalida la caché de 'Users' después de realizar el POST
     }),
-    getLabs: builder.query({
-      query: () => {
+    specialData: builder.mutation({
+      query: ({endpoint,codigo}) => {
         return {
-          url: 'adminLabs',
-          method: 'GET',
+          url: `${endpoint}`,
+          method: 'POST',
+          body: {codigo}
         };
       },
-    }),
-    getSubjects: builder.query({
-      query: () => {
-        return {
-          url: 'adminSubjects',
-          method: 'GET',
-        };
-      },
-    }),
-    getPractices: builder.query({
-      query: () => {
-        return {
-          url: 'adminPractices',
-          method: 'GET',
-        };
-      },
-    }),
-    getTools: builder.query({
-      query: () => {
-        return {
-          url: 'adminTools',
-          method: 'GET',
-        };
-      },
-    }),
-    getReservations: builder.query({
-      query: () => {
-        return {
-          url: 'adminReservations',
-          method: 'GET',
-        };
-      },
+      invalidatesTags: ['Users'],
     }),
   }),
   keepUnusedDataFor: 300,
@@ -98,11 +68,6 @@ export const {
   useNewQueryMutation,
   useUpdateQueryMutation,
   useDeleteQueryMutation,
-  useGetLabsQuery,
-  useGetSubjectsQuery,
-  useGetPracticesQuery,
-  useGetToolsQuery,
-  useGetReservationsQuery,
-  
+  useSpecialDataMutation
 } = apiSlice;
 

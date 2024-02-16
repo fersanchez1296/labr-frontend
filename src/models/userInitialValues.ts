@@ -6,7 +6,7 @@ interface userValues {
   apellido_2: string;
   password: string;
   telefono: number | string;
-  email: string;
+  correo: string;
 }
 
 export const userInitialValues: userValues = {
@@ -17,5 +17,5 @@ export const userInitialValues: userValues = {
   apellido_2: "",
   password: "",
   telefono: "",
-  email: "",
+  correo: "",
 };

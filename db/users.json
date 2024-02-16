@@ -1,7 +1,8 @@
 {
     "users" : [
         {
-            "nombre" : "FERNANDO SANCHEZ",
+            "codigo" : "219341143",
+            "password" : "Yeanbaes1807*",
             "rol" : "ADMINISTRADOR"
         }
     ]

@@ -26,7 +26,7 @@ export const userSchema = yup.object().shape({
     .matches(regexPassword, {message : "La contraseña debe tener al menos 5 caractéres y debe incluir una letra mayúscula, un número y un caracter especial"})
     .min(5, "La contraseña debe tener al menos 5 caractéres")
     .required("Este campo es requerido"),
-  email: yup
+  correo: yup
     .string()
     .matches(regexEmail, {message : "Debes ingresar un email válido"})
     .email("Por favor ingresa un correo electrónico válido")

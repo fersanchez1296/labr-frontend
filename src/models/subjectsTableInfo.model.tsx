@@ -12,9 +12,10 @@ import {
 
 export const columns: GridColDef[] = [
     { field: "crn", headerName: "CRN", width: 90 },
+    { field: "clave", headerName: "Clave", width: 90 },
     { field: "nombre", headerName: "Nombre", width: 300 },
     { field: "semestre", headerName: "Semestre", width: 120 },
-    { field: "carrera", headerName: "Carrera", width: 90 },
+    { field: "carrera", headerName: "Carrera", width: 300 },
     {
       field: "Editar",
       headerName: "Editar",

@@ -1,4 +1,3 @@
-import { useGetAllQuery } from "../../../api/api.slice";
 import { Spiner } from "../../../components/spiner/Spiner";
 import { FormUsers } from "../../../components/formUsers/FormUsers";
 import { useState } from "react";
@@ -6,10 +5,11 @@ import { Table } from "../../../components/table/Table";
 import { columns } from "../../../models/userTableInfo.models";
 import { SnackBar } from "../../../components/snackBar/SnackBar";
 import { ConfirmationDialog } from "../../../components/confirmationDialog/ConfirmationDialog";
+import { useGetAllQuery } from "../../../api/api.slice";
 
 export const Users = () => {
-  const endpointName = "adminTeacher"; 
-  const { data: users, isError, isLoading, error } = useGetAllQuery(endpointName);
+  const endpoint = "adminUser"; 
+  const { data: users, isError, isLoading, error } = useGetAllQuery(endpoint);
   const [showForm, setShowForm] = useState(false);
   const [showDialog, setShowDialog] = useState(false);
   const [userId, setUserId] = useState(0)
@@ -40,8 +40,6 @@ export const Users = () => {
   }
 
   const handleOpenForm = (show: boolean, userId: number) => {
-    console.log(userId);
-    
     setShowForm(show);
     userId !== undefined ? setUserId(userId) : setUserId(0)
   };
@@ -66,7 +64,7 @@ export const Users = () => {
       ) : (
         "No hay información para mostrar"
       )}
-      {showForm && <FormUsers show={showForm} userId={userId} onClose={handleCloseForm} getSingleEndpoint={"adminUser-update"}/>}
+      {showForm && <FormUsers show={showForm} userId={userId} onClose={handleCloseForm} getSingleEndpoint={endpoint}/>}
       {showDialog && <ConfirmationDialog show={showDialog} Id={userId} onClose={handleCloseDialog} endpoint={"adminUser-delete"}/>}
     </>
 
